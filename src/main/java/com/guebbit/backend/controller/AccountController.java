@@ -4,8 +4,6 @@ import com.guebbit.backend.common.ApiResponse;
 import com.guebbit.backend.common.SecurityUtils;
 import com.guebbit.backend.security.AppPrincipal;
 import com.guebbit.backend.service.AuthService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,9 +26,8 @@ public class AccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody Map<String, Object> request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> login(@RequestBody Map<String, Object> request) {
         Map<String, Object> tokens = authService.login((String) request.get("email"), (String) request.get("password"));
-        setRefreshCookie(response, (String) tokens.get("refreshToken"));
         return ResponseEntity.ok(ApiResponse.ok(200, "LOGIN_OK", tokens));
     }
 
@@ -59,8 +56,7 @@ public class AccountController {
 
     @GetMapping("/refresh")
     public ResponseEntity<ApiResponse> refresh(@CookieValue(name = "jwt", required = false) String cookieToken,
-                                               @RequestParam(name = "token", required = false) String queryToken,
-                                               HttpServletResponse response) {
+                                               @RequestParam(name = "token", required = false) String queryToken) {
         String token = queryToken != null ? queryToken : cookieToken;
         Map<String, Object> refreshed = authService.refresh(token);
         return ResponseEntity.ok(ApiResponse.ok(200, "REFRESH_OK", refreshed));
@@ -73,10 +69,9 @@ public class AccountController {
     }
 
     @PostMapping("/logout-all")
-    public ResponseEntity<ApiResponse> logoutAll(HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> logoutAll() {
         AppPrincipal principal = SecurityUtils.requirePrincipal();
         authService.logoutAll(principal);
-        clearRefreshCookie(response);
         return ResponseEntity.ok(ApiResponse.ok(200, "LOGOUT_ALL_OK", Map.of()));
     }
 
@@ -87,20 +82,4 @@ public class AccountController {
         return ResponseEntity.ok(ApiResponse.ok(200, "EXPIRED_TOKENS_CLEANED", Map.of("updatedUsers", removed)));
     }
 
-    private void setRefreshCookie(HttpServletResponse response, String token) {
-        Cookie cookie = new Cookie("jwt", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setSecure(false);
-        cookie.setMaxAge(60 * 60 * 24 * 7);
-        response.addCookie(cookie);
-    }
-
-    private void clearRefreshCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("jwt", "");
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-    }
 }

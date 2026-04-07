@@ -30,10 +30,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        Instant now = Instant.now();
+        counters.entrySet().removeIf(e -> now.isAfter(e.getValue().windowStart.plusSeconds(300)));
         String key = request.getRemoteAddr();
         WindowCounter counter = counters.computeIfAbsent(key, k -> new WindowCounter());
-        if (Instant.now().isAfter(counter.windowStart.plusSeconds(60))) {
-            counter.windowStart = Instant.now();
+        if (now.isAfter(counter.windowStart.plusSeconds(60))) {
+            counter.windowStart = now;
             counter.count.set(0);
         }
         if (counter.count.incrementAndGet() > limit) {

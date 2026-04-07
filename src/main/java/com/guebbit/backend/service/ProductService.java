@@ -43,7 +43,6 @@ public class ProductService {
     public Map<String, Object> getById(String id, boolean admin) {
         ProductDocument p = productRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND"));
         if (!admin && (!p.active || p.deletedAt != null)) throw new ApiException(HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND");
-        if (p.deletedAt != null && !admin) throw new ApiException(HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND");
         return payload(p);
     }
 
