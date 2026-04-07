@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.guebbit.backend.service.CartServiceTest
--------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.081 s -- in com.guebbit.backend.service.CartServiceTest

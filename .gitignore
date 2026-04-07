@@ -131,3 +131,5 @@ dist
 
 # Other
 .idea
+# Maven build output
+target/
